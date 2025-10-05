@@ -95,7 +95,35 @@
                     options: { responsive: true }
                 });
 
-                function updateLoanTerm(){
+                function updateLoanTerm() {
                     const type = document.getElementById('loanType').value;
-                    const termSelect =
-::contentReference[oaicite:0]{index=0}
+                    const termSelect = document.getElementById('loanTerm');
+                    termSelect.innerHTML = '';
+
+                    if (type === 'Conventional') {
+                        ['30', '20', '15', '10'].forEach(term => {
+                            const option = document.createElement('option');
+                            option.value = term;
+                            option.text = term + '-Year';
+                            termSelect.add(option);
+                        });
+                    } else if (type === 'ARM') {
+                        ['1', '3', '5', '7', '10'].forEach(term => {
+                            const option = document.createElement('option');
+                            option.value = term;
+                            option.text = term + '-Year ARM';
+                            termSelect.add(option);
+                        });
+                    }
+                }
+
+                function clearForm() {
+                    document.getElementById('mortgageForm').reset();
+                    document.getElementById('resultsDiv')?.remove();
+                }
+            </script>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
