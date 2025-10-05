@@ -1,78 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>FinancialCalculator — Mortgage Calculator</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Mortgage Calculator 2.0</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<h2>🏡 Mortgage Calculator</h2>
-<form method="POST">
-    <label>Home Value ($):</label>
-    <input type="number" name="home_value" step="0.01" required>
+    <div class="container">
+        <h1>Smart Mortgage Calculator</h1>
 
-    <label>Down Payment:</label>
-    <input type="number" name="down_payment" step="0.01" required>
-    <select name="down_payment_type">
-        <option value="$">$</option>
-        <option value="%">%</option>
-    </select>
+        <form method="POST">
+            <div class="grid">
+                <label>ZIP Code:</label>
+                <input type="text" name="zipcode" required>
 
-    <label>Loan Amount ($) (optional):</label>
-    <input type="number" name="loan_amount" step="0.01">
+                <label>Home Value ($):</label>
+                <input type="number" name="home_value" required>
 
-    <label>Interest Rate (%):</label>
-    <input type="number" name="interest_rate" step="0.01" required>
+                <label>Down Payment ($):</label>
+                <input type="number" name="down_payment" required>
 
-    <label>Loan Term (years):</label>
-    <input type="number" name="loan_term" value="30" required>
+                <label>Interest Rate (%):</label>
+                <input type="number" step="0.01" name="interest_rate" required>
 
-    <label>Property Tax ($/Year):</label>
-    <input type="number" name="property_tax" step="0.01" value="0">
+                <label>Loan Term (years):</label>
+                <input type="number" name="loan_term" value="30">
 
-    <label>PMI (%):</label>
-    <input type="number" name="pmi" step="0.01" value="0">
+                <label>Property Tax ($/yr):</label>
+                <input type="number" name="property_tax" value="3000">
 
-    <label>Home Insurance ($/Year):</label>
-    <input type="number" name="home_ins" step="0.01" value="0">
+                <label>Home Insurance ($/yr):</label>
+                <input type="number" name="home_ins" value="1500">
 
-    <label>Monthly HOA ($):</label>
-    <input type="number" name="hoa" step="0.01" value="0">
+                <label>PMI (%):</label>
+                <input type="number" step="0.01" name="pmi" value="0.5">
 
-    <label>Loan Type:</label>
-    <select name="loan_type">
-        <option>Conventional</option>
-        <option>FHA</option>
-        <option>VA</option>
-        <option>USDA</option>
-    </select>
+                <label>Monthly HOA ($):</label>
+                <input type="number" name="hoa" value="0">
 
-    <label>Buy or Refinance:</label>
-    <select name="buy_refi">
-        <option>Buy</option>
-        <option>Refinance</option>
-    </select>
+                <button type="submit">Calculate</button>
+            </div>
+        </form>
 
-    <button type="submit">Calculate</button>
-</form>
+        {% if result %}
+        <div class="results">
+            <h2>Mortgage Summary</h2>
+            <p><strong>Loan Amount:</strong> ${{ result.loan_amount }}</p>
+            <p><strong>Total Monthly Payment:</strong> ${{ result.monthly_payment }}</p>
 
-{% if result %}
-<div class="result">
-    {% if result.error %}
-        <p style="color:red;">Error: {{ result.error }}</p>
-    {% else %}
-        <h3>Results:</h3>
-        <p><strong>Loan Amount:</strong> ${{ result.loan_amount }}</p>
-        <p><strong>Monthly Payment:</strong> ${{ result.monthly_payment }}</p>
-        <ul>
-            <li>Principal & Interest: ${{ result.details.principal_interest }}</li>
-            <li>Property Tax: ${{ result.details.tax }}</li>
-            <li>Home Insurance: ${{ result.details.insurance }}</li>
-            <li>PMI: ${{ result.details.pmi }}</li>
-            <li>HOA: ${{ result.details.hoa }}</li>
-        </ul>
-    {% endif %}
-</div>
-{% endif %}
+            <h3>Current Rates for ZIP {{ result.zipcode }}</h3>
+            <ul>
+                <li>30-Year Fixed: {{ result.rates["30_yr_fixed"] }}%</li>
+                <li>15-Year Fixed: {{ result.rates["15_yr_fixed"] }}%</li>
+                <li>5/1 ARM: {{ result.rates["5_1_ARM"] }}%</li>
+            </ul>
+
+            <canvas id="chart" width="400" height="400"></canvas>
+        </div>
+
+        <script>
+            const ctx = document.getElementById('chart');
+            const data = {
+                labels: {{ chart_data.keys() | list | tojson }},
+                datasets: [{
+                    data: {{ chart_data.values() | list | tojson }},
+                    backgroundColor: ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f']
+                }]
+            };
+            new Chart(ctx, { type: 'pie', data: data });
+        </script>
+        {% endif %}
+    </div>
 </body>
 </html>
