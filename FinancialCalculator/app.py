@@ -44,15 +44,20 @@ def index():
             monthly_pmi = loan_amount * (pmi / 100 / 12)
             total_monthly = monthly_pi + monthly_tax + monthly_ins + monthly_pmi + hoa
 
-	    result = {
-	    	"loan_amount": round(loan_amount, 2),
-    		"monthly_payment": round(total_monthly, 2),
-    		"details": {
-        		"principal_interest": round(monthly_pi, 2),
-        		"tax": round(monthly_tax, 2),
-        		"insurance": round(monthly_ins, 2),
-        		"pmi": round(monthly_pmi, 2),
-        		"hoa": round(hoa, 2)
-    			}
-		}
+	    	# Fixed result dictionary
+            result = {
+                "loan_amount": round(loan_amount, 2),
+                "monthly_payment": round(total_monthly, 2),
+                "details": {
+                    "principal_interest": round(monthly_pi, 2),
+                    "tax": round(monthly_tax, 2),
+                    "insurance": round(monthly_ins, 2),
+                    "pmi": round(monthly_pmi, 2),
+                    "hoa": round(hoa, 2)
+                }
+            }
 
+        except Exception as e:
+            result = {"error": str(e)}
+
+    return render_template('index.html', result=result)
