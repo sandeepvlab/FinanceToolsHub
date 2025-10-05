@@ -1,73 +1,89 @@
-body {
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     font-family: Arial, sans-serif;
-    background: #f9f9f9;
-    padding: 20px;
 }
 
+body {
+    background: #f4f7f8;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Container */
 .container {
-    max-width: 800px;
-    margin: auto;
-    background: #fff;
+    max-width: 900px;
+    margin: 30px auto;
     padding: 20px;
+    background: #fff;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
+/* Headings */
 h1 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    color: #4e79a7;
 }
 
-.grid {
+h2, h3 {
+    margin-top: 20px;
+    color: #333;
+}
+
+/* Form Grid */
+form .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    align-items: center;
+    gap: 15px 20px;
 }
 
-.grid label {
+form label {
+    display: block;
+    margin-bottom: 5px;
     font-weight: bold;
 }
 
-.grid input, .grid select {
-    padding: 6px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+form input, form select {
     width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
 }
 
-.down-wrapper {
-    display: flex;
-    gap: 6px;
-}
-
-button {
-    grid-column: span 2;
-    padding: 10px;
-    background: #4e79a7;
-    color: white;
+/* Buttons */
+form button {
+    padding: 10px 15px;
     border: none;
     border-radius: 6px;
+    font-size: 16px;
     cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 10px;
 }
 
-button:hover {
-    background: #3b5f86;
+form button[type="submit"] {
+    background-color: #4e79a7;
+    color: #fff;
 }
 
-.results {
-    margin-top: 20px;
-    padding: 15px;
-    background: #e8f0fe;
-    border-radius: 10px;
+form button[type="submit"]:hover {
+    background-color: #3b5f85;
 }
 
-.results ul {
-    list-style: none;
-    padding-left: 0;
+form button[type="button"] {
+    background-color: #e15759;
+    color: #fff;
 }
 
-.pmi-msg {
-    color: red;
-    font-weight: bold;
+form button[type="button"]:hover {
+    background-color: #b83c44;
 }
+
+/* Results Section */
+.results
