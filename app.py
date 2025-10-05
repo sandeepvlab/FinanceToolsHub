@@ -1,81 +1,56 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import requests
 
 app = Flask(__name__)
 
-# --- FRED API configuration ---
-FRED_API_KEY = "YOUR_FRED_API_KEY"  # replace with your FRED API key
-FRED_SERIES = {
-    "30_yr_fixed": "MORTGAGE30US",
-    "15_yr_fixed": "MORTGAGE15US",
-    "5_1_ARM": "MORTGAGE5US"
-}
-
-def get_fred_rate(series_id):
-    url = "https://api.stlouisfed.org/fred/series/observations"
-    params = {
-        "series_id": series_id,
-        "api_key": FRED_API_KEY,
-        "file_type": "json",
-        "sort_order": "desc",
-        "limit": 1
-    }
-    r = requests.get(url, params=params, timeout=10)
-    r.raise_for_status()
-    data = r.json()
-    obs = data.get("observations", [])
-    if obs:
-        return float(obs[0].get("value"))
-    return None
-
+# --- Example: fetching rates from a legal public API or placeholder ---
 def get_mortgage_rates():
-    return {key: get_fred_rate(series) for key, series in FRED_SERIES.items()}
+    # Placeholder static rates; replace with legal API fetch if needed
+    return {
+        "30_yr_fixed": 6.23,
+        "20_yr_fixed": 5.85,
+        "15_yr_fixed": 5.22,
+        "10_yr_fixed": 4.90,
+        "5_1_ARM": 5.74
+    }
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
     chart_data = None
-    rates = None
-    pmi_message = ""
+    rates = get_mortgage_rates()
 
     if request.method == "POST":
         try:
-            zipcode = request.form.get("zipcode", "84044")
             home_value = float(request.form.get("home_value", 0))
-            down_type = request.form.get("down_type", "amount")  # "amount" or "percent"
-            down_value = float(request.form.get("down_payment", 0))
-            loan_type = request.form.get("loan_type", "conventional")
+            down_type = request.form.get("down_type", "$")
+            down_payment_val = float(request.form.get("down_payment", 0))
+            
+            # Calculate down payment in dollars
+            if down_type == "%":
+                down_payment = home_value * down_payment_val / 100
+            else:
+                down_payment = down_payment_val
+
+            loan_type = request.form.get("loan_type", "Conventional")
             loan_term = int(request.form.get("loan_term", 30))
-            interest_rate = float(request.form.get("interest_rate", 0))
+            interest_rate = float(request.form.get("interest_rate", 5))
             property_tax = float(request.form.get("property_tax", 0))
             home_ins = float(request.form.get("home_ins", 0))
             hoa = float(request.form.get("hoa", 0))
 
-            # --- Down Payment Calculation ---
-            if down_type == "percent":
-                down_payment = home_value * (down_value / 100)
-            else:
-                down_payment = down_value
+            # PMI calculation if down <20%
+            pmi_rate = 0
+            pmi_msg = ""
+            if down_payment / home_value < 0.2:
+                pmi_rate = 0.0075  # typical 0.75% annual
+                pmi_msg = "Your down payment is less than 20%, PMI applies (~0.5-1.5% of loan amount per year)."
 
-            # --- Fetch live rates from FRED ---
-            rates = get_mortgage_rates()
-            if interest_rate == 0:
-                if loan_type.lower() == "conventional":
-                    # pick closest fixed rate
-                    if loan_term >= 30:
-                        interest_rate = rates.get("30_yr_fixed", 6.0)
-                    elif loan_term >= 15:
-                        interest_rate = rates.get("15_yr_fixed", 5.5)
-                    else:
-                        interest_rate = rates.get("15_yr_fixed", 5.5)
-                else:
-                    interest_rate = rates.get("5_1_ARM", 5.7)
-
-            # --- Loan Calculation ---
             loan_amount = home_value - down_payment
             monthly_rate = interest_rate / 100 / 12
             months = loan_term * 12
 
+            # Principal & interest
             if monthly_rate > 0:
                 monthly_pi = loan_amount * (monthly_rate * (1 + monthly_rate)**months) / ((1 + monthly_rate)**months - 1)
             else:
@@ -83,18 +58,7 @@ def index():
 
             monthly_tax = property_tax / 12
             monthly_ins = home_ins / 12
-
-            # --- PMI Calculation ---
-            ltv = loan_amount / home_value
-            monthly_pmi = 0
-            if ltv > 0.8:
-                monthly_pmi = loan_amount * 0.0075 / 12
-                pmi_message = (
-                    "Your down payment is less than 20%, so you will be required to pay "
-                    "Private Mortgage Insurance (PMI). Estimated PMI typically ranges "
-                    "from 0.5% to 1.5% of your loan amount per year."
-                )
-
+            monthly_pmi = loan_amount * pmi_rate / 12
             total_monthly = monthly_pi + monthly_tax + monthly_ins + monthly_pmi + hoa
 
             chart_data = {
@@ -109,16 +73,15 @@ def index():
                 "loan_amount": round(loan_amount, 2),
                 "monthly_payment": round(total_monthly, 2),
                 "details": chart_data,
-                "zipcode": zipcode,
-                "rates": rates,
-                "pmi_message": pmi_message
+                "pmi_msg": pmi_msg,
+                "loan_type": loan_type
             }
 
         except Exception as e:
             result = {"error": str(e)}
 
     return render_template("index.html", result=result, chart_data=chart_data, rates=rates)
-        
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
