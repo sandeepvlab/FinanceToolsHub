@@ -1,292 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Smart Mortgage Calculator</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <title>Mortgage Calculator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <div class="container">
-    <h1>Smart Mortgage Calculator</h1>
+    <div class="container">
+        <h1>🏠 Mortgage Calculator</h1>
 
-    <form method="POST" id="mortgageForm">
-      <div class="grid">
-
-        <!-- ZIP Code -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked id="use_zip"> </label>
-          <label class="field-label">ZIP code</label>
-          <input type="text" name="zipcode" id="zipcode" placeholder="Enter ZIP or allow location" />
-          <button type="button" id="detectZip" class="small">Detect ZIP</button>
-        </div>
-
-        <!-- Home Value -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked></label>
-          <label class="field-label">Home Value</label>
-          <div class="right-input">
-            <span class="currency">$</span>
-            <input type="number" step="1000" min="0" name="home_value" id="home_value" value="300000" required>
-          </div>
-        </div>
-
-        <!-- Down Payment -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked></label>
-          <label class="field-label">Down Payment</label>
-          <div class="right-input dp-group">
-            <input type="number" step="0.01" min="0" name="down_payment_value" id="down_payment_value" value="20" required>
-            <div class="radio-inline">
-              <label><input type="radio" name="down_payment_type" value="%" checked> %</label>
-              <label><input type="radio" name="down_payment_type" value="$"> $</label>
+        <form method="POST" id="mortgage-form">
+            <div class="form-group">
+                <label><input type="checkbox" checked> ZIP Code:</label>
+                <input type="text" id="zipcode" name="zipcode" placeholder="Enter ZIP" required>
             </div>
-          </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> Home Value ($):</label>
+                <input type="number" id="home_value" name="home_value" placeholder="e.g. 500000" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> Down Payment:</label>
+                <div class="inline-group">
+                    <input type="number" id="down_payment" name="down_payment" placeholder="e.g. 20" step="0.01" required>
+                    <label><input type="radio" name="down_type" value="$" checked> $</label>
+                    <label><input type="radio" name="down_type" value="%"> %</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> Loan Amount ($):</label>
+                <input type="number" id="loan_amount" name="loan_amount" placeholder="Auto-calculated" readonly>
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> Interest Rate (%):</label>
+                <input type="text" id="interest_rate" name="interest_rate" placeholder="Auto-fetched" readonly>
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> Property Tax ($/year):</label>
+                <input type="number" id="property_tax" name="property_tax" placeholder="e.g. 3500" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> PMI (%):</label>
+                <input type="number" id="pmi" name="pmi" placeholder="Auto-adjusted" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> Home Insurance ($/year):</label>
+                <input type="number" id="home_ins" name="home_ins" placeholder="e.g. 1200" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> Monthly HOA ($):</label>
+                <input type="number" id="hoa" name="hoa" placeholder="e.g. 200" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> Loan Type:</label>
+                <select id="loan_type" name="loan_type">
+                    <option value="Conventional">Conventional - 30 Years</option>
+                    <option value="Conventional15">Conventional - 15 Years</option>
+                    <option value="ARM">ARM (5/1)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" checked> Loan Term (Years):</label>
+                <select id="loan_term" name="loan_term">
+                    <option value="30">30</option>
+                    <option value="20">20</option>
+                    <option value="15">15</option>
+                    <option value="10">10</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-primary">Calculate</button>
+                <button type="reset" class="btn-secondary" onclick="clearForm()">Clear</button>
+            </div>
+        </form>
+
+        {% if result %}
+        <div class="result-card">
+            <h3>💰 Results</h3>
+            <p><strong>Loan Amount:</strong> ${{ result.loan_amount }}</p>
+            <p><strong>Interest Rate:</strong> {{ result.rate }}%</p>
+            <p><strong>Monthly Payment:</strong> ${{ result.monthly_payment }}</p>
         </div>
-
-        <!-- Loan Amount (auto) -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked></label>
-          <label class="field-label">Loan Amount</label>
-          <div class="right-input">
-            <span class="currency">$</span>
-            <input type="number" id="loan_amount" name="loan_amount" readonly>
-          </div>
-        </div>
-
-        <!-- Interest Rate (fetched) -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked></label>
-          <label class="field-label">Interest Rate</label>
-          <div class="right-input">
-            <input type="text" id="interest_rate_display" name="interest_rate" readonly>
-            <small id="rate_hint" class="hint">Rate fetched by Loan Type & Term</small>
-          </div>
-        </div>
-
-        <!-- Property Tax -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked></label>
-          <label class="field-label">Property Tax</label>
-          <div class="right-input">
-            <input type="number" name="property_tax" id="property_tax" value="3000" step="1">
-            <span class="unit">$/yr</span>
-          </div>
-        </div>
-
-        <!-- PMI -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked></label>
-          <label class="field-label">PMI</label>
-          <div class="right-input">
-            <input type="number" step="0.01" name="pmi" id="pmi" value="" placeholder="auto">
-            <span class="unit">%</span>
-          </div>
-        </div>
-
-        <!-- Home Insurance -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked></label>
-          <label class="field-label">Home Ins</label>
-          <div class="right-input">
-            <input type="number" step="1" name="home_ins" id="home_ins" placeholder="auto estimate">
-            <span class="unit">$/yr</span>
-          </div>
-        </div>
-
-        <!-- Monthly HOA -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked></label>
-          <label class="field-label">Monthly HOA</label>
-          <div class="right-input">
-            <input type="number" step="1" name="hoa" id="hoa" value="0">
-            <span class="unit">$</span>
-          </div>
-        </div>
-
-        <!-- Loan Type & Term -->
-        <div class="field-row">
-          <label class="field-checkbox"><input type="checkbox" checked></label>
-          <label class="field-label">Loan Type</label>
-          <div class="right-input">
-            <select name="loan_type" id="loan_type">
-              <option value="Conventional">Conventional</option>
-              <option value="ARM">ARM</option>
-            </select>
-            <select name="loan_term" id="loan_term">
-              <!-- For conventional: 30,20,15,10. For ARM: 3,5,7,10 -->
-              <option value="30">30 yr</option>
-              <option value="20">20 yr</option>
-              <option value="15">15 yr</option>
-              <option value="10">10 yr</option>
-            </select>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="actions">
-        <button type="submit" id="calculate" class="btn primary">Calculate</button>
-        <button type="button" id="clear" class="btn ghost">Clear</button>
-      </div>
-    </form>
-
-    <!-- Results -->
-    <div id="results" class="results" style="display: {% if result %}block{% else %}none{% endif %};">
-      {% if result %}
-        <h2>Mortgage Summary</h2>
-        <p><strong>Loan Amount:</strong> ${{ result.loan_amount }}</p>
-        <p><strong>Interest Rate:</strong> {{ result.interest_rate }}%</p>
-        <p><strong>Monthly P&I:</strong> ${{ result.monthly_pi }}</p>
-        <p><strong>Monthly Taxes:</strong> ${{ result.monthly_property_tax }}</p>
-        <p><strong>Monthly Insurance:</strong> ${{ result.monthly_insurance }}</p>
-        <p><strong>Monthly PMI:</strong> ${{ result.monthly_pmi }}</p>
-        <p><strong>HOA:</strong> ${{ result.hoa }}</p>
-        <p><strong>Total Monthly Payment:</strong> ${{ result.monthly_total }}</p>
-
-        <canvas id="chart" style="max-width:420px;margin-top:15px;"></canvas>
-      {% endif %}
+        {% endif %}
     </div>
-  </div>
 
 <script>
-/* ---------- helper functions ---------- */
-function $(id){return document.getElementById(id);}
-
-function computeLoanAmount(){
-  const hv = parseFloat($('home_value').value || 0);
-  const dpVal = parseFloat($('down_payment_value').value || 0);
-  const dpType = document.querySelector('input[name="down_payment_type"]:checked').value;
-  let downAmt = 0;
-  if(dpType === '%'){
-    downAmt = hv * (dpVal/100);
-  } else {
-    downAmt = dpVal;
-  }
-  const loan = Math.max(0, hv - downAmt);
-  $('loan_amount').value = loan.toFixed(2);
-  return {loan, downAmt};
-}
-
-function updateInterestDisplay(rate){
-  $('interest_rate_display').value = rate ? rate + '%' : '—';
-}
-
-/* ---------- auto-zip detect ---------- */
-async function detectZip() {
-  const zipInput = $('zipcode');
-  try {
-    if(!("geolocation" in navigator)) return;
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      // Use BigDataCloud free reverse geocode (no key required)
-      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
-      const j = await res.json();
-      if(j.postcode){
-        zipInput.value = j.postcode;
-      }
-    }, err => {
-      console.warn('Geolocation failed:', err);
-    }, {timeout:10000});
-  } catch(e){
-    console.warn('Zip detection error', e);
-  }
-}
-
-/* ---------- Update loan-term options when loan type changes ---------- */
-function updateLoanTermOptions(){
-  const loanType = $('loan_type').value;
-  const termSelect = $('loan_term');
-  termSelect.innerHTML = '';
-  if(loanType === 'Conventional'){
-    [30,20,15,10].forEach(v=>{
-      const opt = document.createElement('option');
-      opt.value = v; opt.text = v + ' yr';
-      termSelect.add(opt);
-    });
-  } else {
-    [3,5,7,10].forEach(v=>{
-      const opt = document.createElement('option');
-      opt.value = v; opt.text = v + ' yr ARM';
-      termSelect.add(opt);
-    });
-  }
-}
-
-/* ---------- On form changes ---------- */
-document.addEventListener('DOMContentLoaded', ()=> {
-  // make sure these IDs exist
-  if($('home_value')) {
-    $('home_value').addEventListener('input', computeLoanAmount);
-  }
-  if($('down_payment_value')) {
-    $('down_payment_value').addEventListener('input', computeLoanAmount);
-  }
-  document.querySelectorAll('input[name="down_payment_type"]').forEach(el=>el.addEventListener('change', computeLoanAmount));
-
-  // Loan type change updates term options
-  $('loan_type').addEventListener('change', ()=> {
-    updateLoanTermOptions();
-    // fetch & update interest hint if result area not yet submitted
-    fetchRateHint();
+document.querySelectorAll('#zipcode, #loan_type, #loan_term').forEach(el => {
+  el.addEventListener('change', async () => {
+    const zipcode = document.getElementById('zipcode').value;
+    const loan_type = document.getElementById('loan_type').value.includes("ARM") ? "ARM" : "Conventional";
+    const loan_term = document.getElementById('loan_term').value;
+    if (zipcode.length >= 5) {
+      const res = await fetch(`/_rate_hint?zipcode=${zipcode}&loan_type=${loan_type}&loan_term=${loan_term}`);
+      const data = await res.json();
+      document.getElementById('interest_rate').value = data.rate;
+    }
   });
-
-  $('detectZip').addEventListener('click', detectZip);
-
-  // Clear button
-  $('clear').addEventListener('click', ()=> {
-    document.getElementById('mortgageForm').reset();
-    updateLoanTermOptions();
-    $('loan_amount').value = '';
-    updateInterestDisplay('');
-    // hide results
-    document.getElementById('results').style.display = 'none';
-    detectZip();
-  });
-
-  // Compute loan amount upfront
-  computeLoanAmount();
-  updateLoanTermOptions();
-  detectZip();
-
-  // Fetch interest hint for the UI (asynchronous)
-  fetchRateHint();
 });
 
-/* ---------- Fetch a rate hint to show current rate in the interest field (not required) ---------- */
-async function fetchRateHint(){
-  const loanType = $('loan_type').value;
-  const loanTerm = parseInt($('loan_term').value || 30);
-  const zip = $('zipcode').value || '';
-  try {
-    // ask backend for suggested rate (we provide a route to compute interest if needed)
-    const resp = await fetch('/_rate_hint?loan_type=' + loanType + '&loan_term=' + loanTerm + '&zipcode=' + zip);
-    if(resp.ok){
-      const j = await resp.json();
-      if(j.rate !== undefined) updateInterestDisplay(j.rate);
-    }
-  } catch(e){
-    // ignore
-  }
+// Auto-calc loan amount + PMI logic
+document.getElementById("down_payment").addEventListener("input", calcLoan);
+document.querySelectorAll('input[name="down_type"]').forEach(r => r.addEventListener("change", calcLoan));
+document.getElementById("home_value").addEventListener("input", calcLoan);
+
+function calcLoan() {
+    const home = parseFloat(document.getElementById("home_value").value) || 0;
+    const down = parseFloat(document.getElementById("down_payment").value) || 0;
+    const downType = document.querySelector('input[name="down_type"]:checked').value;
+    let downVal = (downType === "%") ? (down / 100) * home : down;
+    const loan = home - downVal;
+    document.getElementById("loan_amount").value = loan.toFixed(2);
+
+    // PMI rule: <20% down → 0.75%, else 0
+    const pmi = (downType === "%" && down < 20) ? 0.75 : 0;
+    document.getElementById("pmi").value = pmi;
 }
 
-/* ---------- Chart rendering when results exist ---------- */
-{% if result %}
-(function(){
-  const dataLabels = {{ chart_data.keys()|list|tojson }};
-  const dataValues = {{ chart_data.values()|list|tojson }};
-  const ctx = document.getElementById('chart').getContext('2d');
-  new Chart(ctx, {
-    type:'pie',
-    data:{
-      labels: dataLabels,
-      datasets:[{data: dataValues}]
-    }
-  });
-})();
-{% endif %}
+function clearForm() {
+    document.querySelector('.result-card')?.remove();
+}
 </script>
 </body>
 </html>
