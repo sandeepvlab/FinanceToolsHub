@@ -1,62 +1,70 @@
 body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
-    margin: 0;
-    padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f9fafb;
+  display: flex;
+  justify-content: center;
+  padding: 40px;
 }
 
 .container {
-    width: 90%;
-    max-width: 600px;
-    margin: 50px auto;
-    background: #fff;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #ccc;
+  width: 500px;
+  background: #fff;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-    text-align: center;
-    margin-bottom: 20px;
+  text-align: center;
+  color: #333;
 }
 
-form label {
-    display: block;
-    margin-top: 15px;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-form input, form select, form button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+label {
+  font-weight: 600;
+  margin-top: 10px;
 }
 
-.dp-type {
-    margin-top: 5px;
-}
-
-.dp-type label {
-    display: inline-block;
-    margin-right: 10px;
+input, select, button {
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
 button {
-    background: #28a745;
-    color: #fff;
-    border: none;
-    margin-top: 20px;
-    cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
 }
 
 button:hover {
-    background: #218838;
+  background-color: #45a049;
 }
 
 .results {
-    margin-top: 30px;
-    padding: 20px;
-    background: #e9ecef;
-    border-radius: 8px;
+  margin-top: 25px;
+  text-align: center;
+}
+
+.down-payment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.radio-labels {
+  margin-left: 10px;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
 }
