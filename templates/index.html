@@ -1,162 +1,335 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Mortgage Calculator</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
+  <meta charset="utf-8" />
+  <title>Smart Mortgage Calculator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-100 p-6">
-<div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
-    <h1 class="text-3xl font-bold mb-4">🏠 Mortgage Calculator</h1>
-    <form id="mortgage-form" method="POST" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="font-semibold">ZIP Code:</label>
-                <input type="text" id="zipcode" name="zipcode" class="border p-2 w-full" placeholder="Enter ZIP" required>
-            </div>
-            <div>
-                <label class="font-semibold">Home Value ($):</label>
-                <input type="number" id="home_value" name="home_value" class="border p-2 w-full" placeholder="500000" step="0.01" required>
-            </div>
-            <div>
-                <label class="font-semibold">Down Payment:</label>
-                <div class="flex gap-2">
-                    <input type="number" id="down_payment" name="down_payment" class="border p-2 flex-1" placeholder="20" step="0.01" required>
-                    <select name="down_type" class="border p-2">
-                        <option value="%">%</option>
-                        <option value="$">$</option>
-                    </select>
-                </div>
-            </div>
-            <div>
-                <label class="font-semibold">Loan Amount ($):</label>
-                <input type="number" id="loan_amount" name="loan_amount" class="border p-2 w-full bg-gray-100" placeholder="Auto" readonly>
-            </div>
-            <div>
-                <label class="font-semibold">Interest Rate (%):</label>
-                <input type="text" id="interest_rate" name="interest_rate" class="border p-2 w-full bg-gray-100" placeholder="Auto" readonly>
-            </div>
-            <div>
-                <label class="font-semibold">Property Tax ($/year):</label>
-                <input type="number" id="property_tax" name="property_tax" class="border p-2 w-full" placeholder="3500" step="0.01">
-            </div>
-            <div>
-                <label class="font-semibold">PMI (%):</label>
-                <input type="number" id="pmi" name="pmi" class="border p-2 w-full bg-gray-100" placeholder="Auto" readonly>
-            </div>
-            <div>
-                <label class="font-semibold">Home Insurance ($/year):</label>
-                <input type="number" id="home_ins" name="home_ins" class="border p-2 w-full" placeholder="1200" step="0.01">
-            </div>
-            <div>
-                <label class="font-semibold">Monthly HOA ($):</label>
-                <input type="number" id="hoa" name="hoa" class="border p-2 w-full" placeholder="200" step="0.01">
-            </div>
-            <div>
-                <label class="font-semibold">Loan Type:</label>
-                <select id="loan_type" name="loan_type" class="border p-2 w-full">
-                    <option value="Conventional">Conventional</option>
-                    <option value="ARM">ARM</option>
-                </select>
-            </div>
-            <div>
-                <label class="font-semibold">Loan Term (Years):</label>
-                <select id="loan_term" name="loan_term" class="border p-2 w-full">
-                    <option value="30">30</option>
-                    <option value="20">20</option>
-                    <option value="15">15</option>
-                    <option value="10">10</option>
-                </select>
-            </div>
-        </div>
+<body>
+  <div class="card">
+    <h1 class="title">🏠 Smart Mortgage Calculator</h1>
 
-        <div class="flex gap-4 mt-4">
-            <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">Calculate</button>
-            <button type="reset" class="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500" onclick="clearResults()">Clear</button>
+    <form id="form" onsubmit="onSubmit(event)">
+
+      <div class="grid-row">
+        <input type="checkbox" id="use_zip" checked>
+        <label for="zipcode">ZIP Code</label>
+        <div class="input-group">
+          <input type="text" id="zipcode" name="zipcode" placeholder="e.g. 94043">
+          <button type="button" class="btn small" id="detectZip">Detect</button>
         </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_home_value" checked>
+        <label for="home_value">Home Value</label>
+        <div class="input-group">
+          <input type="number" id="home_value" name="home_value" value="500000" min="0" step="0.01">
+          <span class="addon">$</span>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_down" checked>
+        <label for="down_payment_value">Down Payment</label>
+        <div class="input-group">
+          <input type="number" id="down_payment_value" name="down_payment_value" value="20" min="0" step="0.01">
+          <div class="radio-inline">
+            <label><input type="radio" name="down_payment_type" value="%" checked> %</label>
+            <label><input type="radio" name="down_payment_type" value="$"> $</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_loan_amount" checked>
+        <label for="loan_amount">Loan Amount</label>
+        <div class="input-group">
+          <input type="number" id="loan_amount" name="loan_amount" readonly>
+          <span class="addon">$</span>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_rate" checked>
+        <label for="interest_rate">Interest Rate</label>
+        <div class="input-group">
+          <input type="text" id="interest_rate" name="interest_rate" readonly>
+          <span class="addon">%</span>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_tax" checked>
+        <label for="property_tax">Property Tax</label>
+        <div class="input-group">
+          <input type="number" id="property_tax" name="property_tax" value="3600" min="0" step="0.01">
+          <span class="addon">$/yr</span>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_pmi" checked>
+        <label for="pmi">PMI</label>
+        <div class="input-group">
+          <input type="number" id="pmi" name="pmi" placeholder="Auto" step="0.01">
+          <span class="addon">%</span>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_ins" checked>
+        <label for="home_ins">Home Insurance</label>
+        <div class="input-group">
+          <input type="number" id="home_ins" name="home_ins" placeholder="Auto" step="0.01">
+          <span class="addon">$/yr</span>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_hoa" checked>
+        <label for="hoa">Monthly HOA</label>
+        <div class="input-group">
+          <input type="number" id="hoa" name="hoa" value="0" step="0.01">
+          <span class="addon">$</span>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_type" checked>
+        <label for="loan_type">Loan Type</label>
+        <div class="input-group">
+          <select id="loan_type" name="loan_type">
+            <option value="Conventional">Conventional</option>
+            <option value="ARM">ARM</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <input type="checkbox" id="include_term" checked>
+        <label for="loan_term">Loan Term (yrs)</label>
+        <div class="input-group">
+          <select id="loan_term" name="loan_term"></select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn primary">Calculate</button>
+        <button type="button" class="btn ghost" id="clearBtn">Clear</button>
+      </div>
     </form>
 
-    <div id="results" class="mt-6 hidden bg-gray-50 p-4 rounded shadow">
-        <h2 class="text-2xl font-bold mb-2">💰 Results</h2>
-        <p><strong>Loan Amount:</strong> $<span id="res_loan"></span></p>
-        <p><strong>Interest Rate:</strong> <span id="res_rate"></span>%</p>
-        <p><strong>Monthly Payment:</strong> $<span id="res_total"></span></p>
-        <canvas id="paymentChart" class="mt-4"></canvas>
+    <div id="resultPanel" class="result-panel hidden">
+      <div class="result-rows">
+        <div><strong>Loan Amount:</strong> $<span id="r_loan_amount"></span></div>
+        <div><strong>Interest Rate:</strong> <span id="r_interest_rate"></span>%</div>
+        <div><strong>Monthly P&I:</strong> $<span id="r_monthly_pi"></span></div>
+        <div><strong>Monthly Taxes:</strong> $<span id="r_property_tax"></span></div>
+        <div><strong>Monthly Insurance:</strong> $<span id="r_insurance"></span></div>
+        <div><strong>Monthly PMI:</strong> $<span id="r_pmi"></span></div>
+        <div><strong>HOA:</strong> $<span id="r_hoa"></span></div>
+        <div class="total"><strong>Total Monthly:</strong> $<span id="r_total"></span></div>
+      </div>
+
+      <canvas id="pieChart" width="400" height="300"></canvas>
     </div>
-</div>
+  </div>
 
 <script>
+/* -------------------------
+   UI logic & AJAX
+   -------------------------*/
+
 const loanTermOptions = {
-    "Conventional": [30, 20, 15, 10],
-    "ARM": [3, 5, 7, 10]
+  "Conventional": [30, 20, 15, 10],
+  "ARM": [3, 5, 7, 10]
 };
 
-function updateLoanTerms() {
-    const type = document.getElementById('loan_type').value;
-    const termSelect = document.getElementById('loan_term');
-    termSelect.innerHTML = '';
-    loanTermOptions[type].forEach(v=>{
-        const opt = document.createElement('option');
-        opt.value = v; opt.innerText = v;
-        termSelect.appendChild(opt);
+function setLoanTermOptions(type) {
+  const sel = document.getElementById('loan_term');
+  sel.innerHTML = '';
+  loanTermOptions[type].forEach(v=>{
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+// live rate fetch
+async function updateRate() {
+  const useZip = document.getElementById('use_zip').checked;
+  const zipcode = document.getElementById('zipcode').value.trim();
+  const loan_type = document.getElementById('loan_type').value;
+  const loan_term = document.getElementById('loan_term').value;
+  // only fetch if loan_type/term present; we allow zipcode but it's optional
+  try {
+    const resp = await fetch(`/_rate_hint?loan_type=${encodeURIComponent(loan_type)}&loan_term=${encodeURIComponent(loan_term)}&zipcode=${encodeURIComponent(zipcode)}&use_zip=${useZip?1:0}`);
+    const j = await resp.json();
+    if (j && j.rate !== undefined) {
+      document.getElementById('interest_rate').value = parseFloat(j.rate).toFixed(3);
+    }
+  } catch (err) {
+    console.warn('Rate hint failed', err);
+    document.getElementById('interest_rate').value = '';
+  }
+}
+
+// auto-calc loan amount and PMI
+function updateLoanAmountAndPMI() {
+  const home = parseFloat(document.getElementById('home_value').value) || 0;
+  let down = parseFloat(document.getElementById('down_payment_value').value) || 0;
+  const downType = Array.from(document.getElementsByName('down_payment_type')).find(r=>r.checked).value;
+  let downAmount = (downType === '%') ? (home * down / 100.0) : down;
+  downAmount = Math.min(downAmount, home);
+  const loanAmount = Math.max(0, home - downAmount);
+  document.getElementById('loan_amount').value = loanAmount.toFixed(2);
+
+  // auto PMI rule
+  const downPercent = (downType === '%') ? down : (home>0? (downAmount/home*100) : 0);
+  const pmi = downPercent < 20 ? 0.75 : 0;
+  // only set PMI if input empty (user can override)
+  const pmiField = document.getElementById('pmi');
+  if (!pmiField.value || pmiField.value === "") {
+    pmiField.value = pmi.toFixed(2);
+  }
+}
+
+// toggle enabling/disabling inputs when checkboxes are clicked
+function wireCheckboxToggles() {
+  const rows = document.querySelectorAll('.grid-row');
+  rows.forEach(row=>{
+    const cb = row.querySelector('input[type="checkbox"]');
+    const inputs = row.querySelectorAll('.input-group input, .input-group select, .input-group button');
+    if (cb) {
+      cb.addEventListener('change', ()=> {
+        inputs.forEach(i => i.disabled = !cb.checked);
+      });
+      // initialize
+      inputs.forEach(i => i.disabled = !cb.checked);
+    }
+  });
+}
+
+// detect ZIP (best effort using browser geolocation + reverse geocode)
+document.getElementById('detectZip').addEventListener('click', async ()=>{
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const resp = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+      const j = await resp.json();
+      if (j && j.postcode) document.getElementById('zipcode').value = j.postcode;
+      updateRate();
+    } catch(e){ console.warn(e); }
+  }, err=>{
+    console.warn('geo failed', err);
+  }, {timeout:10000});
+});
+
+// main calculate action -> call backend /calculate with JSON
+async function onSubmit(e){
+  e.preventDefault();
+
+  // gather data
+  const payload = {
+    zipcode: document.getElementById('zipcode').value.trim(),
+    use_zip: document.getElementById('use_zip').checked,
+    home_value: parseFloat(document.getElementById('home_value').value) || 0,
+    down_payment_value: parseFloat(document.getElementById('down_payment_value').value) || 0,
+    down_payment_type: Array.from(document.getElementsByName('down_payment_type')).find(r=>r.checked).value,
+    loan_type: document.getElementById('loan_type').value,
+    loan_term: parseInt(document.getElementById('loan_term').value),
+    property_tax: document.getElementById('include_tax').checked ? parseFloat(document.getElementById('property_tax').value) || 0 : 0,
+    pmi: document.getElementById('include_pmi').checked ? (document.getElementById('pmi').value ? parseFloat(document.getElementById('pmi').value) : null) : 0,
+    home_ins: document.getElementById('include_ins').checked ? (document.getElementById('home_ins').value ? parseFloat(document.getElementById('home_ins').value) : null) : 0,
+    hoa: document.getElementById('include_hoa').checked ? parseFloat(document.getElementById('hoa').value) || 0 : 0
+  };
+
+  // call server
+  try {
+    const resp = await fetch('/calculate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
     });
-    fetchInterestRate();
+    const j = await resp.json();
+    showResult(j);
+  } catch (err) {
+    console.error('calculate failed', err);
+    alert('Calculation failed, check console.');
+  }
 }
 
-async function fetchInterestRate() {
-    const loan_type = document.getElementById('loan_type').value;
-    const loan_term = document.getElementById('loan_term').value;
-    const res = await fetch(`/_rate_hint?loan_type=${loan_type}&loan_term=${loan_term}`);
-    const data = await res.json();
-    document.getElementById('interest_rate').value = data.rate;
+let paymentChart = null;
+function showResult(j){
+  if(!j) return;
+  document.getElementById('r_loan_amount').textContent = (j.loan_amount||0).toFixed(2);
+  document.getElementById('r_interest_rate').textContent = (j.interest_rate||0).toFixed(3);
+  document.getElementById('r_monthly_pi').textContent = (j.monthly_pi||0).toFixed(2);
+  document.getElementById('r_property_tax').textContent = (j.monthly_property_tax||0).toFixed(2);
+  document.getElementById('r_insurance').textContent = (j.monthly_insurance||0).toFixed(2);
+  document.getElementById('r_pmi').textContent = (j.monthly_pmi||0).toFixed(2);
+  document.getElementById('r_hoa').textContent = (j.hoa||0).toFixed(2);
+  document.getElementById('r_total').textContent = (j.monthly_total||0).toFixed(2);
+
+  document.getElementById('resultPanel').classList.remove('hidden');
+
+  const chartData = j.chart_data || {};
+  const labels = Object.keys(chartData);
+  const values = Object.values(chartData);
+
+  const ctx = document.getElementById('pieChart').getContext('2d');
+  if(paymentChart) paymentChart.destroy();
+  paymentChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{ data: values, backgroundColor: ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'] }]
+    },
+    options: { responsive: true }
+  });
 }
 
-function calcLoanAmount() {
-    const home = parseFloat(document.getElementById("home_value").value) || 0;
-    const down = parseFloat(document.getElementById("down_payment").value) || 0;
-    const downType = document.querySelector('select[name="down_type"]').value;
-    let downVal = downType === "%" ? home*down/100 : down;
-    document.getElementById("loan_amount").value = (home-downVal).toFixed(2);
+// initialize UI wiring
+function init(){
+  // set initial loan term options
+  setLoanTermOptions(document.getElementById('loan_type').value);
+  // listen to changes for dynamic behaviors
+  document.getElementById('loan_type').addEventListener('change', ()=>{
+    setLoanTermOptions(document.getElementById('loan_type').value);
+    updateRate();
+  });
+  document.getElementById('loan_term').addEventListener('change', updateRate);
+  document.getElementById('zipcode').addEventListener('input', updateRate);
+  document.getElementById('use_zip').addEventListener('change', updateRate);
 
-    // PMI auto
-    const pmi = downType === "%" && down < 20 ? 0.75 : 0;
-    document.getElementById("pmi").value = pmi;
+  // down/home change -> update loan amount & pmi
+  document.getElementById('home_value').addEventListener('input', updateLoanAmountAndPMI);
+  document.getElementById('down_payment_value').addEventListener('input', updateLoanAmountAndPMI);
+  Array.from(document.getElementsByName('down_payment_type')).forEach(r=>r.addEventListener('change', updateLoanAmountAndPMI));
+
+  // checkbox toggles
+  wireCheckboxToggles();
+
+  // clear button
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    document.getElementById('form').reset();
+    setLoanTermOptions('Conventional');
+    updateLoanAmountAndPMI();
+    document.getElementById('resultPanel').classList.add('hidden');
+    updateRate();
+  });
+
+  // initial calculations
+  updateLoanAmountAndPMI();
+  updateRate();
 }
 
-function clearResults() {
-    document.getElementById('results').classList.add('hidden');
-}
-
-document.getElementById('loan_type').addEventListener('change', updateLoanTerms);
-document.getElementById('loan_term').addEventListener('change', fetchInterestRate);
-document.getElementById('home_value').addEventListener('input', calcLoanAmount);
-document.getElementById('down_payment').addEventListener('input', calcLoanAmount);
-document.querySelector('select[name="down_type"]').addEventListener('change', calcLoanAmount);
-
-document.getElementById('mortgage-form').addEventListener('submit', function(e){
-    e.preventDefault();
-    fetch('/', {
-        method: 'POST',
-        body: new FormData(this)
-    }).then(r=>r.text()).then(html=>{
-        // Render result from backend
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const resDiv = doc.getElementById('results');
-        if(resDiv){
-            document.getElementById('results').innerHTML = resDiv.innerHTML;
-            document.getElementById('results').classList.remove('hidden');
-            // Pie chart
-            const chartData = JSON.parse(doc.getElementById('chart-data')?.textContent || '{}');
-            if(chartData){
-                const ctx = document.getElementById('paymentChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: Object.keys(chartData),
-                        datasets: [{data:Object.values(chartData), backgroundColor:['#3B82F6','#10B981','#FBBF24','#EF4444','#8B5CF6']}]
-                    },
-                });
-            }
-        }
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
