@@ -1,48 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Mortgage Calculator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mortgage Calculator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Mortgage Calculator</h1>
-        <form method="POST">
-            <label>Home Price ($):</label>
-            <input type="number" name="price" step="1000" required>
+  <div class="container">
+    <h1>🏠 Mortgage Calculator</h1>
 
-            <label>Down Payment:</label>
-            <input type="number" name="down_payment" step="1000" required>
-            <div class="dp-type">
-                <label><input type="radio" name="dp_type" value="%" checked> %</label>
-                <label><input type="radio" name="dp_type" value="$"> $</label>
-            </div>
+    <form method="POST">
+      <label>Home Price ($):</label>
+      <input type="number" name="home_price" step="1000" required>
 
-            <label>Loan Term (Years):</label>
-            <select name="loan_term">
-                <option value="30">30</option>
-                <option value="15">15</option>
-            </select>
+      <label>Down Payment:</label>
+      <div class="down-payment">
+        <input type="number" name="down_payment" step="500" required>
+        <span class="radio-labels">
+          <input type="radio" name="down_type" checked> $ 
+          <input type="radio" name="down_type"> %
+        </span>
+      </div>
 
-            <label>Rate Type:</label>
-            <select name="rate_type">
-                <option value="30_yr_fixed">30-Year Fixed ({{ rates['30_yr_fixed'] }}%)</option>
-                <option value="5_1_ARM">5/1 ARM ({{ rates['5_1_ARM'] }}%)</option>
-            </select>
+      <label>Loan Term (years):</label>
+      <select name="loan_term" required>
+        <option value="15">15</option>
+        <option value="20">20</option>
+        <option value="30" selected>30</option>
+      </select>
 
-            <button type="submit">Calculate</button>
-        </form>
+      <label>Loan Type:</label>
+      <select name="interest_type">
+        <option value="conventional">Conventional ({{ rates.conventional }}%)</option>
+        <option value="arm">5/1 ARM ({{ rates.arm }}%)</option>
+      </select>
 
-        {% if result %}
-            <div class="results">
-                <h2>Results:</h2>
-                <p>Loan Amount: ${{ result.loan_amount }}</p>
-                <p>Monthly Payment: ${{ result.monthly_payment }}</p>
-                <p>PMI: {{ result.pmi }}%</p>
-                <p>Down Payment: {{ result.down_payment_percent }}%</p>
-            </div>
-        {% endif %}
+      <label>ZIP Code:</label>
+      <input type="text" name="zipcode" id="zipcode" placeholder="Enter ZIP code" required>
+
+      <button type="submit">Calculate</button>
+    </form>
+
+    {% if result %}
+    <div class="results">
+      {% if result.error %}
+        <p class="error">{{ result.error }}</p>
+      {% else %}
+        <h2>Results</h2>
+        <p><strong>Monthly Payment:</strong> ${{ result.monthly_payment }}</p>
+        <p><strong>Total Payment:</strong> ${{ result.total_payment }}</p>
+        <p><strong>Total Interest:</strong> ${{ result.total_interest }}</p>
+        <p><strong>PMI:</strong> ${{ result.pmi }}</p>
+        <p><strong>ZIP Code:</strong> {{ result.zipcode }}</p>
+        <canvas id="paymentChart" width="400" height="200"></canvas>
+      {% endif %}
     </div>
+    {% endif %}
+  </div>
+
+  {% if chart_data %}
+  <script>
+    const ctx = document.getElementById("paymentChart").getContext("2d");
+    new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: {{ chart_data.keys() | list | tojson }},
+        datasets: [{
+          data: {{ chart_data.values() | list | tojson }},
+          backgroundColor: ["#4CAF50", "#FF9800", "#2196F3"]
+        }]
+      }
+    });
+  </script>
+  {% endif %}
+
+  <script>
+    // Auto-detect ZIP code from location
+    async function getLocationZip() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          try {
+            const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+            const data = await response.json();
+            if (data.postcode) {
+              document.getElementById("zipcode").value = data.postcode;
+            }
+          } catch (err) {
+            console.error("Location error:", err);
+          }
+        });
+      }
+    }
+    getLocationZip();
+  </script>
 </body>
 </html>
