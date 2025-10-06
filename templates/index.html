@@ -3,141 +3,160 @@
 <head>
 <meta charset="UTF-8">
 <title>Mortgage Calculator</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-<div class="container">
-    <h1>🏠 Mortgage Calculator</h1>
-
-    <form id="mortgage-form" method="POST">
-        <label>ZIP Code:</label>
-        <input type="text" id="zipcode" name="zipcode" placeholder="Enter ZIP" required>
-
-        <label>Home Value ($):</label>
-        <input type="number" id="home_value" name="home_value" placeholder="500000" step="0.01" required>
-
-        <label>Down Payment:</label>
-        <div class="inline-group">
-            <input type="number" id="down_payment" name="down_payment_value" placeholder="20" step="0.01" required>
-            <label><input type="radio" name="down_payment_type" value="$" checked> $</label>
-            <label><input type="radio" name="down_payment_type" value="%"> %</label>
+<body class="bg-gray-100 p-6">
+<div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+    <h1 class="text-3xl font-bold mb-4">🏠 Mortgage Calculator</h1>
+    <form id="mortgage-form" method="POST" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="font-semibold">ZIP Code:</label>
+                <input type="text" id="zipcode" name="zipcode" class="border p-2 w-full" placeholder="Enter ZIP" required>
+            </div>
+            <div>
+                <label class="font-semibold">Home Value ($):</label>
+                <input type="number" id="home_value" name="home_value" class="border p-2 w-full" placeholder="500000" step="0.01" required>
+            </div>
+            <div>
+                <label class="font-semibold">Down Payment:</label>
+                <div class="flex gap-2">
+                    <input type="number" id="down_payment" name="down_payment" class="border p-2 flex-1" placeholder="20" step="0.01" required>
+                    <select name="down_type" class="border p-2">
+                        <option value="%">%</option>
+                        <option value="$">$</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="font-semibold">Loan Amount ($):</label>
+                <input type="number" id="loan_amount" name="loan_amount" class="border p-2 w-full bg-gray-100" placeholder="Auto" readonly>
+            </div>
+            <div>
+                <label class="font-semibold">Interest Rate (%):</label>
+                <input type="text" id="interest_rate" name="interest_rate" class="border p-2 w-full bg-gray-100" placeholder="Auto" readonly>
+            </div>
+            <div>
+                <label class="font-semibold">Property Tax ($/year):</label>
+                <input type="number" id="property_tax" name="property_tax" class="border p-2 w-full" placeholder="3500" step="0.01">
+            </div>
+            <div>
+                <label class="font-semibold">PMI (%):</label>
+                <input type="number" id="pmi" name="pmi" class="border p-2 w-full bg-gray-100" placeholder="Auto" readonly>
+            </div>
+            <div>
+                <label class="font-semibold">Home Insurance ($/year):</label>
+                <input type="number" id="home_ins" name="home_ins" class="border p-2 w-full" placeholder="1200" step="0.01">
+            </div>
+            <div>
+                <label class="font-semibold">Monthly HOA ($):</label>
+                <input type="number" id="hoa" name="hoa" class="border p-2 w-full" placeholder="200" step="0.01">
+            </div>
+            <div>
+                <label class="font-semibold">Loan Type:</label>
+                <select id="loan_type" name="loan_type" class="border p-2 w-full">
+                    <option value="Conventional">Conventional</option>
+                    <option value="ARM">ARM</option>
+                </select>
+            </div>
+            <div>
+                <label class="font-semibold">Loan Term (Years):</label>
+                <select id="loan_term" name="loan_term" class="border p-2 w-full">
+                    <option value="30">30</option>
+                    <option value="20">20</option>
+                    <option value="15">15</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
         </div>
 
-        <label>Loan Amount ($):</label>
-        <input type="number" id="loan_amount" name="loan_amount" placeholder="Auto-calculated" readonly>
-
-        <label>Interest Rate (%):</label>
-        <input type="text" id="interest_rate" name="interest_rate" placeholder="Auto-fetched" readonly>
-
-        <label>Property Tax ($/year):</label>
-        <input type="number" id="property_tax" name="property_tax" placeholder="3500" step="0.01">
-
-        <label>PMI (%):</label>
-        <input type="number" id="pmi" name="pmi" placeholder="Auto-adjusted" step="0.01">
-
-        <label>Home Insurance ($/year):</label>
-        <input type="number" id="home_ins" name="home_ins" placeholder="1200" step="0.01">
-
-        <label>Monthly HOA ($):</label>
-        <input type="number" id="hoa" name="hoa" placeholder="200" step="0.01">
-
-        <label>Loan Type:</label>
-        <select id="loan_type" name="loan_type">
-            <option value="Conventional">Conventional</option>
-            <option value="ARM">ARM</option>
-        </select>
-
-        <label>Loan Term (Years):</label>
-        <select id="loan_term" name="loan_term">
-            <option value="30">30</option>
-            <option value="20">20</option>
-            <option value="15">15</option>
-            <option value="10">10</option>
-            <option value="5">5</option>
-        </select>
-
-        <div class="button-group">
-            <button type="submit" class="btn-primary">Calculate</button>
-            <button type="reset" class="btn-secondary" onclick="clearResults()">Clear</button>
+        <div class="flex gap-4 mt-4">
+            <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">Calculate</button>
+            <button type="reset" class="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500" onclick="clearResults()">Clear</button>
         </div>
     </form>
 
-    <div id="results" class="result-card" style="display:none;">
-        <h2>💰 Results</h2>
-        <p><strong>Loan Amount:</strong> $<span id="res_loan_amount"></span></p>
-        <p><strong>Interest Rate:</strong> <span id="res_interest_rate"></span>%</p>
-        <p><strong>Monthly PI:</strong> $<span id="res_monthly_pi"></span></p>
-        <p><strong>PMI:</strong> $<span id="res_pmi"></span></p>
-        <p><strong>Total Monthly Payment:</strong> $<span id="res_total"></span></p>
+    <div id="results" class="mt-6 hidden bg-gray-50 p-4 rounded shadow">
+        <h2 class="text-2xl font-bold mb-2">💰 Results</h2>
+        <p><strong>Loan Amount:</strong> $<span id="res_loan"></span></p>
+        <p><strong>Interest Rate:</strong> <span id="res_rate"></span>%</p>
+        <p><strong>Monthly Payment:</strong> $<span id="res_total"></span></p>
+        <canvas id="paymentChart" class="mt-4"></canvas>
     </div>
 </div>
 
 <script>
-async function fetchRate() {
-    const zipcode = document.getElementById('zipcode').value;
+const loanTermOptions = {
+    "Conventional": [30, 20, 15, 10],
+    "ARM": [3, 5, 7, 10]
+};
+
+function updateLoanTerms() {
+    const type = document.getElementById('loan_type').value;
+    const termSelect = document.getElementById('loan_term');
+    termSelect.innerHTML = '';
+    loanTermOptions[type].forEach(v=>{
+        const opt = document.createElement('option');
+        opt.value = v; opt.innerText = v;
+        termSelect.appendChild(opt);
+    });
+    fetchInterestRate();
+}
+
+async function fetchInterestRate() {
     const loan_type = document.getElementById('loan_type').value;
     const loan_term = document.getElementById('loan_term').value;
-    if(zipcode.length >= 5) {
-        const res = await fetch(`/_rate_hint?zipcode=${zipcode}&loan_type=${loan_type}&loan_term=${loan_term}`);
-        const data = await res.json();
-        document.getElementById('interest_rate').value = data.rate.toFixed(3);
-    }
+    const res = await fetch(`/_rate_hint?loan_type=${loan_type}&loan_term=${loan_term}`);
+    const data = await res.json();
+    document.getElementById('interest_rate').value = data.rate;
 }
 
-// Auto-update interest rate
-document.getElementById('zipcode').addEventListener('input', fetchRate);
-document.getElementById('loan_type').addEventListener('change', fetchRate);
-document.getElementById('loan_term').addEventListener('change', fetchRate);
+function calcLoanAmount() {
+    const home = parseFloat(document.getElementById("home_value").value) || 0;
+    const down = parseFloat(document.getElementById("down_payment").value) || 0;
+    const downType = document.querySelector('select[name="down_type"]').value;
+    let downVal = downType === "%" ? home*down/100 : down;
+    document.getElementById("loan_amount").value = (home-downVal).toFixed(2);
 
-// Auto-calc loan amount + PMI
-function calcLoan() {
-    const home = parseFloat(document.getElementById('home_value').value) || 0;
-    const down = parseFloat(document.getElementById('down_payment').value) || 0;
-    const downType = document.querySelector('input[name="down_payment_type"]:checked').value;
-    const downVal = (downType === '%') ? (down/100)*home : down;
-    const loanAmount = Math.max(0, home - downVal);
-    document.getElementById('loan_amount').value = loanAmount.toFixed(2);
-
-    const downPct = (downType === '%') ? down : (down/home)*100;
-    const pmi = (downPct < 20) ? 0.75 : 0;
-    document.getElementById('pmi').value = pmi.toFixed(2);
+    // PMI auto
+    const pmi = downType === "%" && down < 20 ? 0.75 : 0;
+    document.getElementById("pmi").value = pmi;
 }
-
-document.getElementById('home_value').addEventListener('input', calcLoan);
-document.getElementById('down_payment').addEventListener('input', calcLoan);
-document.querySelectorAll('input[name="down_payment_type"]').forEach(r => r.addEventListener('change', calcLoan));
 
 function clearResults() {
-    document.getElementById('results').style.display='none';
+    document.getElementById('results').classList.add('hidden');
 }
 
-// Handle form submit
-document.getElementById('mortgage-form').addEventListener('submit', async e=>{
+document.getElementById('loan_type').addEventListener('change', updateLoanTerms);
+document.getElementById('loan_term').addEventListener('change', fetchInterestRate);
+document.getElementById('home_value').addEventListener('input', calcLoanAmount);
+document.getElementById('down_payment').addEventListener('input', calcLoanAmount);
+document.querySelector('select[name="down_type"]').addEventListener('change', calcLoanAmount);
+
+document.getElementById('mortgage-form').addEventListener('submit', function(e){
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const res = await fetch('/', {method:'POST', body: formData});
-    const text = await res.text();
-    // After submit, get dynamic values
-    const loanAmount = parseFloat(document.getElementById('loan_amount').value) || 0;
-    const interestRate = parseFloat(document.getElementById('interest_rate').value) || 0;
-    const term = parseInt(document.getElementById('loan_term').value) || 30;
-    const monthlyPI = loanAmount*(interestRate/100/12)*Math.pow(1+interestRate/100/12, term*12)/(Math.pow(1+interestRate/100/12, term*12)-1);
-
-    const propertyTax = parseFloat(document.getElementById('property_tax').value) || 0;
-    const insurance = parseFloat(document.getElementById('home_ins').value) || 0;
-    const pmi = parseFloat(document.getElementById('pmi').value) || 0;
-    const hoa = parseFloat(document.getElementById('hoa').value) || 0;
-
-    const total = monthlyPI + propertyTax/12 + insurance/12 + (loanAmount*pmi/100)/12 + hoa;
-
-    document.getElementById('res_loan_amount').textContent = loanAmount.toFixed(2);
-    document.getElementById('res_interest_rate').textContent = interestRate.toFixed(3);
-    document.getElementById('res_monthly_pi').textContent = monthlyPI.toFixed(2);
-    document.getElementById('res_pmi').textContent = ((loanAmount*pmi/100)/12).toFixed(2);
-    document.getElementById('res_total').textContent = total.toFixed(2);
-
-    document.getElementById('results').style.display='block';
-});
-</script>
-</body>
-</html>
+    fetch('/', {
+        method: 'POST',
+        body: new FormData(this)
+    }).then(r=>r.text()).then(html=>{
+        // Render result from backend
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const resDiv = doc.getElementById('results');
+        if(resDiv){
+            document.getElementById('results').innerHTML = resDiv.innerHTML;
+            document.getElementById('results').classList.remove('hidden');
+            // Pie chart
+            const chartData = JSON.parse(doc.getElementById('chart-data')?.textContent || '{}');
+            if(chartData){
+                const ctx = document.getElementById('paymentChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(chartData),
+                        datasets: [{data:Object.values(chartData), backgroundColor:['#3B82F6','#10B981','#FBBF24','#EF4444','#8B5CF6']}]
+                    },
+                });
+            }
+        }
