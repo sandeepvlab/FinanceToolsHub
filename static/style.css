@@ -1,89 +1,62 @@
-/* Basic Reset */
-* {
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
 }
 
-body {
-    background: #f4f7f8;
-    color: #333;
-    line-height: 1.6;
-    min-height: 100vh;
-}
-
-/* Container */
 .container {
-    max-width: 900px;
-    margin: 30px auto;
-    padding: 20px;
+    width: 90%;
+    max-width: 600px;
+    margin: 50px auto;
     background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #ccc;
 }
 
-/* Headings */
 h1 {
     text-align: center;
-    margin-bottom: 30px;
-    color: #4e79a7;
-}
-
-h2, h3 {
-    margin-top: 20px;
-    color: #333;
-}
-
-/* Form Grid */
-form .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px 20px;
+    margin-bottom: 20px;
 }
 
 form label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+    margin-top: 15px;
 }
 
-form input, form select {
+form input, form select, form button {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
     border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 16px;
 }
 
-/* Buttons */
-form button {
-    padding: 10px 15px;
+.dp-type {
+    margin-top: 5px;
+}
+
+.dp-type label {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+button {
+    background: #28a745;
+    color: #fff;
     border: none;
-    border-radius: 6px;
-    font-size: 16px;
+    margin-top: 20px;
     cursor: pointer;
-    transition: background 0.3s ease;
-    margin-top: 10px;
 }
 
-form button[type="submit"] {
-    background-color: #4e79a7;
-    color: #fff;
+button:hover {
+    background: #218838;
 }
 
-form button[type="submit"]:hover {
-    background-color: #3b5f85;
+.results {
+    margin-top: 30px;
+    padding: 20px;
+    background: #e9ecef;
+    border-radius: 8px;
 }
-
-form button[type="button"] {
-    background-color: #e15759;
-    color: #fff;
-}
-
-form button[type="button"]:hover {
-    background-color: #b83c44;
-}
-
-/* Results Section */
-.results
