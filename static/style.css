@@ -1,92 +1,90 @@
+/* static/style.css */
+
+/* General body styling */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f5f6fa;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; /* Tailwind gray-100 */
 }
 
-.container {
-    background: #fff;
-    padding: 25px 30px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    width: 90%;
-    max-width: 650px;
+/* Container card */
+.container, .max-w-4xl {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-h1 {
-    text-align: center;
-    color: #2d3436;
-    margin-bottom: 20px;
-}
-
-.form-group {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-}
-
-label {
-    font-weight: bold;
-    color: #2f3640;
-    margin-right: 10px;
-    flex: 1 1 50%;
-}
-
+/* Form inputs */
 input[type="text"], input[type="number"], select {
-    flex: 1 1 45%;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
+    border: 1px solid #d1d5db; /* Tailwind gray-300 */
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    width: 100%;
+    transition: border-color 0.2s;
 }
 
+input[type="text"]:focus, input[type="number"]:focus, select:focus {
+    outline: none;
+    border-color: #3b82f6; /* Tailwind blue-500 */
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.3);
+}
+
+/* Buttons */
+button {
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+button.btn-primary {
+    background-color: #3b82f6; /* blue-500 */
+    color: #fff;
+}
+
+button.btn-primary:hover {
+    background-color: #2563eb; /* blue-600 */
+}
+
+button.btn-secondary {
+    background-color: #9ca3af; /* gray-400 */
+    color: #fff;
+}
+
+button.btn-secondary:hover {
+    background-color: #6b7280; /* gray-500 */
+}
+
+/* Result card */
+.result-card {
+    background-color: #f9fafb; /* gray-50 */
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Form group */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+/* Inline groups (for down payment $ / %) */
 .inline-group {
     display: flex;
+    gap: 0.5rem;
     align-items: center;
-    gap: 8px;
 }
 
-input[type="radio"] {
-    margin-left: 4px;
-}
-
-.button-group {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.btn-primary {
-    background-color: #0984e3;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.btn-secondary {
-    background-color: #dfe6e9;
-    color: #2d3436;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.result-card {
-    margin-top: 25px;
-    background: #f1f2f6;
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #dcdde1;
+/* Responsive table / chart */
+canvas {
+    max-width: 100%;
 }
