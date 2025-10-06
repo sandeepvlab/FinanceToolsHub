@@ -1,94 +1,95 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 import requests
+import math
 
 app = Flask(__name__)
 
-# === FRED API Key ===
+# FRED API key (your valid key)
 FRED_API_KEY = "14290ebba38ce5ea815d8529a6242114"
 
-def get_mortgage_rates():
-    """
-    Fetch 30-year fixed and 5/1 ARM mortgage rates from FRED
-    """
-    rates = {"30_yr_fixed": None, "5_1_ARM": None}
+# FRED Series IDs for rates
+FRED_SERIES = {
+    "conventional": "MORTGAGE30US",  # 30-Year Fixed
+    "arm": "MORTGAGE5US"             # 5/1-Year ARM
+}
+
+
+def fetch_fred_rate(series_id):
+    """Fetch latest rate from FRED API"""
     try:
-        url_fixed = f"https://api.stlouisfed.org/fred/series/observations?series_id=MORTGAGE30US&api_key={FRED_API_KEY}&file_type=json&frequency=w&limit=1"
-        url_arm = f"https://api.stlouisfed.org/fred/series/observations?series_id=MORTGAGE5US&api_key={FRED_API_KEY}&file_type=json&frequency=w&limit=1"
-
-        res_fixed = requests.get(url_fixed)
-        res_arm = requests.get(url_arm)
-        res_fixed.raise_for_status()
-        res_arm.raise_for_status()
-
-        data_fixed = res_fixed.json()
-        data_arm = res_arm.json()
-
-        rates["30_yr_fixed"] = float(data_fixed['observations'][-1]['value'])
-        rates["5_1_ARM"] = float(data_arm['observations'][-1]['value'])
-
+        url = (
+            f"https://api.stlouisfed.org/fred/series/observations"
+            f"?series_id={series_id}&api_key={FRED_API_KEY}&file_type=json&sort_order=desc&limit=1"
+        )
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        return float(data["observations"][-1]["value"])
     except Exception as e:
-        print("Error fetching FRED rates:", e)
-        rates["30_yr_fixed"] = 6.5  # fallback default
-        rates["5_1_ARM"] = 5.8       # fallback default
-
-    return rates
+        print("Error fetching FRED rate:", e)
+        return None
 
 
-def calculate_pmi(down_payment_percent):
-    """
-    PMI logic:
-    Typically 0.3% - 1.5% if downpayment < 20%
-    """
-    if down_payment_percent >= 20:
-        return 0.0
-    else:
-        # Linear scale: higher PMI for smaller downpayment
-        return round(0.75 + (20 - down_payment_percent) * 0.05, 2)
+def calculate_mortgage(principal, annual_rate, years):
+    """Calculate monthly mortgage payment"""
+    r = annual_rate / 100 / 12
+    n = years * 12
+    return principal * r * ((1 + r) ** n) / ((1 + r) ** n - 1)
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    rates = get_mortgage_rates()
-    result = {}
+    result = None
+    chart_data = None
+    rates = {}
+
+    # Fetch latest mortgage rates
+    rates["conventional"] = fetch_fred_rate(FRED_SERIES["conventional"]) or 6.75
+    rates["arm"] = fetch_fred_rate(FRED_SERIES["arm"]) or 6.25
 
     if request.method == "POST":
-        price = float(request.form.get("price", 0))
-        down_payment_val = float(request.form.get("down_payment", 0))
-        dp_type = request.form.get("dp_type", "%")
-        loan_term = int(request.form.get("loan_term", 30))
-        rate_type = request.form.get("rate_type", "30_yr_fixed")
+        try:
+            home_price = float(request.form["home_price"])
+            down_payment = float(request.form["down_payment"])
+            loan_term = int(request.form["loan_term"])
+            zipcode = request.form.get("zipcode", "")
+            interest_type = request.form["interest_type"]
 
-        # Convert DP $ -> %
-        if dp_type == "$":
-            down_payment_percent = (down_payment_val / price) * 100
-        else:
-            down_payment_percent = down_payment_val
+            # Auto-select interest rate
+            rate = rates["conventional"] if interest_type == "conventional" else rates["arm"]
 
-        loan_amount = price * (1 - down_payment_percent / 100)
-        rate = rates.get(rate_type, 6.5) / 100
+            loan_amount = home_price - down_payment
+            down_percent = (down_payment / home_price) * 100
 
-        # PMI
-        pmi = calculate_pmi(down_payment_percent)
+            # Auto-calc PMI if < 20%
+            pmi_rate = 0.75 if down_percent < 20 else 0
+            monthly_pmi = (loan_amount * (pmi_rate / 100)) / 12
 
-        # Monthly mortgage calculation
-        n_payments = loan_term * 12
-        if rate > 0:
-            monthly_payment = loan_amount * (rate/12 * (1 + rate/12)**n_payments) / ((1 + rate/12)**n_payments - 1)
-        else:
-            monthly_payment = loan_amount / n_payments
+            monthly_payment = calculate_mortgage(loan_amount, rate, loan_term)
+            total_payment = monthly_payment * loan_term * 12 + (monthly_pmi * loan_term * 12)
+            total_interest = total_payment - loan_amount
 
-        monthly_payment += loan_amount * pmi / 12 / 100  # Add PMI
+            result = {
+                "monthly_payment": round(monthly_payment + monthly_pmi, 2),
+                "total_payment": round(total_payment, 2),
+                "total_interest": round(total_interest, 2),
+                "pmi": round(monthly_pmi, 2),
+                "zipcode": zipcode,
+                "rate": rate
+            }
 
-        result = {
-            "loan_amount": round(loan_amount, 2),
-            "monthly_payment": round(monthly_payment, 2),
-            "pmi": round(pmi, 2),
-            "down_payment_percent": round(down_payment_percent, 2),
-            "rates": rates
-        }
+            # For chart display
+            chart_data = {
+                "Principal": loan_amount,
+                "Interest": total_interest,
+                "PMI": monthly_pmi * loan_term * 12,
+            }
 
-    return render_template("index.html", result=result, rates=rates)
+        except Exception as e:
+            result = {"error": str(e)}
+
+    return render_template("index.html", result=result, rates=rates, chart_data=chart_data)
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=10000, debug=True)
