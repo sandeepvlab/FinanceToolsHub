@@ -1,148 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Smart Mortgage Calculator</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { background: #f8fafc; }
-        .card { border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .form-label { font-weight: 600; }
-        .result-box { background: #fff; padding: 1rem; border-radius: 0.75rem; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Mortgage Calculator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="p-4">
-<div class="container">
-    <div class="text-center mb-4">
-        <h2 class="fw-bold text-primary">🏠 Smart Mortgage Calculator</h2>
-        <p class="text-muted">Real-time rates via FRED API</p>
+<body>
+  <div class="container">
+    <h1>🏠 Smart Mortgage Calculator</h1>
+
+    <div class="card">
+      <label>ZIP Code:</label>
+      <input type="text" id="zipcode" placeholder="e.g. 94040">
+
+      <label>Home Value ($):</label>
+      <input type="number" id="home_value" placeholder="e.g. 500000">
+
+      <label>Down Payment:</label>
+      <div class="inline">
+        <input type="number" id="down_payment_value" placeholder="e.g. 20">
+        <label><input type="radio" name="dp_type" value="%" checked> %</label>
+        <label><input type="radio" name="dp_type" value="$"> $</label>
+      </div>
+
+      <label>Loan Type:</label>
+      <select id="loan_type" onchange="updateTerms()">
+        <option value="Conventional">Conventional</option>
+        <option value="ARM">ARM</option>
+      </select>
+
+      <label>Loan Term (Years):</label>
+      <select id="loan_term"></select>
+
+      <label>Property Tax ($/year):</label>
+      <input type="number" id="property_tax" placeholder="e.g. 3500">
+
+      <label>PMI (%):</label>
+      <input type="number" id="pmi" placeholder="Auto" step="0.01">
+
+      <label>Home Insurance ($/year):</label>
+      <input type="number" id="home_ins" placeholder="e.g. 1200">
+
+      <label>Monthly HOA ($):</label>
+      <input type="number" id="hoa" placeholder="e.g. 200">
+
+      <button onclick="calculate()">Calculate</button>
+      <button class="clear" onclick="clearForm()">Clear</button>
     </div>
 
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card p-4">
-                <form id="calcForm" onsubmit="onSubmit(event)">
-                    <div class="mb-3">
-                        <label class="form-label">Zipcode</label>
-                        <input type="text" id="zipcode" class="form-control" placeholder="Enter zipcode">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Home Value ($)</label>
-                        <input type="number" id="home_value" class="form-control" placeholder="e.g. 500000">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Down Payment</label>
-                        <div class="input-group">
-                            <input type="number" id="down_payment" class="form-control" placeholder="e.g. 20">
-                            <select id="down_type" class="form-select">
-                                <option value="%">%</option>
-                                <option value="$">$</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Loan Type</label>
-                        <select id="loan_type" class="form-select" onchange="updateLoanTerms()">
-                            <option value="Conventional">Conventional</option>
-                            <option value="ARM">ARM</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Loan Term (Years)</label>
-                        <select id="term" class="form-select"></select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Property Tax ($/year)</label>
-                        <input type="number" id="property_tax" class="form-control" value="3600">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Home Insurance ($/year)</label>
-                        <input type="number" id="home_ins" class="form-control" placeholder="Auto estimated if blank">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Monthly HOA ($)</label>
-                        <input type="number" id="hoa" class="form-control" value="0">
-                    </div>
-
-                    <button class="btn btn-primary w-100">Calculate</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="result-box mb-4" id="resultBox" style="display:none;">
-                <h5 class="fw-bold">Monthly Payment: <span id="monthly_total" class="text-success"></span></h5>
-                <p>Loan Amount: <span id="loan_amount"></span></p>
-                <p>Interest Rate: <span id="interest_rate"></span>%</p>
-                <canvas id="chart" height="220"></canvas>
-            </div>
-        </div>
+    <div class="results" id="results" style="display:none;">
+      <h2>💰 Results</h2>
+      <p><b>Loan Amount:</b> $<span id="loan_amount"></span></p>
+      <p><b>Interest Rate:</b> <span id="interest_rate"></span>%</p>
+      <p><b>Monthly Payment:</b> $<span id="monthly_payment"></span></p>
+      <canvas id="chart" width="300" height="300"></canvas>
     </div>
-</div>
+  </div>
 
-<script>
-let chart;
-
-function updateLoanTerms() {
-    const type = document.getElementById("loan_type").value;
-    const termSel = document.getElementById("term");
-    termSel.innerHTML = "";
-    let terms = type === "Conventional" ? [30, 20, 15, 10] : [3, 5, 7, 10];
-    terms.forEach(y => {
+  <script>
+    function updateTerms() {
+      const type = document.getElementById("loan_type").value;
+      const term = document.getElementById("loan_term");
+      term.innerHTML = "";
+      const terms = type === "Conventional" ? [30, 20, 15, 10] : [3, 5, 7, 10];
+      terms.forEach(y => {
         const opt = document.createElement("option");
         opt.value = y;
-        opt.textContent = y;
-        termSel.appendChild(opt);
-    });
-}
-updateLoanTerms();
+        opt.text = y + " years";
+        term.appendChild(opt);
+      });
+    }
 
-async function onSubmit(e) {
-    e.preventDefault();
-    const payload = {
+    async function calculate() {
+      const payload = {
         zipcode: document.getElementById("zipcode").value,
-        home_value: +document.getElementById("home_value").value,
-        down_payment: +document.getElementById("down_payment").value,
-        down_type: document.getElementById("down_type").value,
+        home_value: document.getElementById("home_value").value,
+        down_payment_value: document.getElementById("down_payment_value").value,
+        down_payment_type: document.querySelector('input[name="dp_type"]:checked').value,
         loan_type: document.getElementById("loan_type").value,
-        term: +document.getElementById("term").value,
-        property_tax: +document.getElementById("property_tax").value,
-        home_ins: +document.getElementById("home_ins").value,
-        hoa: +document.getElementById("hoa").value
-    };
-    const res = await fetch("/calculate", {
+        loan_term: document.getElementById("loan_term").value,
+        property_tax: document.getElementById("property_tax").value,
+        pmi: document.getElementById("pmi").value,
+        home_ins: document.getElementById("home_ins").value,
+        hoa: document.getElementById("hoa").value
+      };
+      const res = await fetch("/calculate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    document.getElementById("resultBox").style.display = "block";
-    document.getElementById("monthly_total").innerText = `$${data.monthly_total}`;
-    document.getElementById("loan_amount").innerText = `$${data.loan_amount}`;
-    document.getElementById("interest_rate").innerText = data.interest_rate;
+      });
+      const data = await res.json();
 
-    const ctx = document.getElementById("chart").getContext("2d");
-    if (chart) chart.destroy();
-    chart = new Chart(ctx, {
+      document.getElementById("loan_amount").textContent = data.loan_amount;
+      document.getElementById("interest_rate").textContent = data.interest_rate;
+      document.getElementById("monthly_payment").textContent = data.monthly_payment;
+      document.getElementById("results").style.display = "block";
+
+      const ctx = document.getElementById("chart").getContext("2d");
+      new Chart(ctx, {
         type: "pie",
         data: {
-            labels: Object.keys(data.breakdown),
-            datasets: [{
-                data: Object.values(data.breakdown),
-                backgroundColor: ["#007bff", "#ffc107", "#dc3545", "#20c997", "#6c757d"]
-            }]
-        },
-        options: { plugins: { legend: { position: "bottom" } } }
-    });
-}
-</script>
+          labels: ["Principal+Interest", "Tax+Insurance+PMI+HOA"],
+          datasets: [{
+            data: [data.monthly_payment * 0.7, data.monthly_payment * 0.3]
+          }]
+        }
+      });
+    }
+
+    function clearForm() {
+      document.querySelectorAll("input").forEach(i => i.value = "");
+      document.getElementById("results").style.display = "none";
+    }
+
+    updateTerms();
+  </script>
 </body>
 </html>
