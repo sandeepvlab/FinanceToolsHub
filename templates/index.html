@@ -22,29 +22,8 @@
     .result-box {
       background: #fff;
       border-radius: 12px;
-      padding: 25px;
+      padding: 20px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      margin-top: 30px;
-    }
-    .result-flex {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 30px;
-    }
-    .chart-container {
-      flex: 1;
-      min-width: 280px;
-      max-width: 350px;
-    }
-    .summary-container {
-      flex: 1;
-      min-width: 280px;
-    }
-    canvas {
-      width: 100% !important;
-      height: auto !important;
     }
   </style>
 </head>
@@ -124,20 +103,14 @@
       </div>
     </div>
 
-    <div id="results" class="result-box" style="display:none;">
-      <h4 class="mb-3">💰 Mortgage Summary</h4>
-      <div class="result-flex">
-        <div class="chart-container">
-          <canvas id="chart"></canvas>
-        </div>
-        <div class="summary-container">
-          <p><strong>Loan Amount:</strong> $<span id="loan_amount"></span></p>
-          <p><strong>Interest Rate:</strong> <span id="int_rate"></span>%</p>
-          <p><strong>PMI:</strong> <span id="pmi_rate"></span>%</p>
-          <p><strong>Home Insurance:</strong> $<span id="ins_val"></span></p>
-          <p><strong>Monthly Payment:</strong> <strong class="text-primary">$<span id="monthly_payment"></span></strong></p>
-        </div>
-      </div>
+    <div id="results" class="result-box">
+      <h4>💰 Results</h4>
+      <p><strong>Loan Amount:</strong> $<span id="loan_amount"></span></p>
+      <p><strong>Interest Rate:</strong> <span id="int_rate"></span>%</p>
+      <p><strong>PMI:</strong> <span id="pmi_rate"></span>%</p>
+      <p><strong>Home Insurance:</strong> $<span id="ins_val"></span></p>
+      <p><strong>Monthly Payment:</strong> $<span id="monthly_payment"></span></p>
+      <canvas id="chart"></canvas>
     </div>
   </div>
 
@@ -175,7 +148,6 @@
         loan_type: document.getElementById("loan_type").value,
         loan_term: document.getElementById("loan_term").value,
         property_tax: document.getElementById("property_tax").value,
-        home_ins: document.getElementById("home_ins").value,
         hoa: document.getElementById("hoa").value
       };
       const res = await fetch("/calculate", {
@@ -184,34 +156,26 @@
         body: JSON.stringify(body)
       });
       const data = await res.json();
-
-      document.getElementById("results").style.display = "block";
       document.getElementById("loan_amount").textContent = data.loan_amount;
       document.getElementById("int_rate").textContent = data.interest_rate;
       document.getElementById("pmi_rate").textContent = data.pmi_percent;
-      document.getElementById("ins_val").textContent = data.chart["Insurance"];
-      document.getElementById("monthly_payment").textContent = data.monthly_total;
-
-      // PIE CHART DATA
-      const chartData = Object.values(data.chart);
-      const chartLabels = Object.keys(data.chart);
+      document.getElementById("ins_val").textContent = data.home_ins;
+      document.getElementById("monthly_payment").textContent = data.monthly_payment;
 
       if (chart) chart.destroy();
       chart = new Chart(document.getElementById("chart"), {
         type: 'pie',
         data: {
-          labels: chartLabels,
+          labels: ["Principal & Interest", "Tax", "Insurance", "PMI", "HOA"],
           datasets: [{
-            data: chartData,
-            backgroundColor: ['#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f']
+            data: [
+              data.monthly_payment - (data.home_ins / 12),
+              data.property_tax / 12,
+              data.home_ins / 12,
+              data.pmi_percent,
+              data.hoa
+            ]
           }]
-        },
-        options: {
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
         }
       });
     }
