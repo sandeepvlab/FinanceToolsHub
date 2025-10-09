@@ -3,196 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mortgage Calculator</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <title>🏠 Mortgage Calculator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
   <div class="container">
     <h1>🏠 Mortgage Calculator</h1>
 
-    <form id="calcForm">
+    <form id="mortgageForm">
       <div class="form-group">
-        <label><input type="checkbox" id="zipcodeCheck" checked> Zipcode:</label>
-        <input type="text" id="zipcode" placeholder="e.g., 98008" required />
-      </div>
-
-      <div class="form-group">
-        <label><input type="checkbox" checked> Home Value:</label>
+        <label for="zipcode">ZIP Code:</label>
         <div class="input-with-symbol">
-          <span>$</span>
-          <input type="number" id="homeValue" placeholder="e.g., 800000" required />
+          <input type="text" id="zipcode" name="zipcode" placeholder="Enter ZIP">
         </div>
       </div>
 
       <div class="form-group">
-        <label><input type="checkbox" checked> Down Payment:</label>
+        <label for="home_value">Home Value:</label>
         <div class="input-with-symbol">
-          <input type="number" id="downPaymentValue" placeholder="e.g., 20" />
+          <span>$</span>
+          <input type="number" id="home_value" name="home_value" placeholder="e.g. 500000">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="down_payment">Down Payment:</label>
+        <div class="input-with-symbol">
+          <input type="number" id="down_payment" name="down_payment" placeholder="e.g. 20">
           <div class="radio-group">
-            <label><input type="radio" name="downType" value="$"> $</label>
-            <label><input type="radio" name="downType" value="%" checked> %</label>
+            <label><input type="radio" name="dp_type" value="%" checked> %</label>
+            <label><input type="radio" name="dp_type" value="$"> $</label>
           </div>
         </div>
       </div>
 
       <div class="form-group">
-        <label><input type="checkbox" checked> Loan Amount:</label>
+        <label for="loan_amount">Loan Amount:</label>
         <div class="input-with-symbol">
           <span>$</span>
-          <input type="number" id="loanAmount" readonly />
+          <input type="text" id="loan_amount" readonly placeholder="Auto-calculated">
         </div>
       </div>
 
       <div class="form-group">
-        <label><input type="checkbox" checked> Interest Rate:</label>
+        <label for="interest_rate">Interest Rate:</label>
         <div class="input-with-symbol">
-          <input type="number" id="interestRate" readonly />
           <span>%</span>
+          <input type="text" id="interest_rate" readonly placeholder="Auto-fetched">
         </div>
       </div>
 
       <div class="form-group">
-        <label><input type="checkbox" checked> Property Tax:</label>
+        <label for="property_tax">Property Tax:</label>
         <div class="input-with-symbol">
-          <span>$</span>
-          <input type="number" id="propertyTax" placeholder="e.g., 8000" />
-          <span>/year</span>
+          <span>$ /yr</span>
+          <input type="number" id="property_tax" name="property_tax" placeholder="e.g. 3500">
         </div>
       </div>
 
       <div class="form-group">
-        <label><input type="checkbox" checked> PMI:</label>
+        <label for="pmi">PMI:</label>
         <div class="input-with-symbol">
-          <input type="number" id="pmi" placeholder="auto" />
           <span>%</span>
+          <input type="text" id="pmi" name="pmi" readonly placeholder="Auto-adjusted">
         </div>
       </div>
 
       <div class="form-group">
-        <label><input type="checkbox" checked> Home Insurance:</label>
+        <label for="home_ins">Home Insurance:</label>
+        <div class="input-with-symbol">
+          <span>$ /yr</span>
+          <input type="number" id="home_ins" name="home_ins" placeholder="e.g. 1200">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="hoa">Monthly HOA:</label>
         <div class="input-with-symbol">
           <span>$</span>
-          <input type="number" id="homeIns" placeholder="auto" />
-          <span>/year</span>
+          <input type="number" id="hoa" name="hoa" placeholder="e.g. 200">
         </div>
       </div>
 
       <div class="form-group">
-        <label><input type="checkbox" checked> Monthly HOA:</label>
-        <div class="input-with-symbol">
-          <span>$</span>
-          <input type="number" id="hoa" placeholder="e.g., 200" />
-        </div>
+        <label for="loan_type">Loan Type:</label>
+        <select id="loan_type" name="loan_type">
+          <option value="Conventional">Conventional</option>
+          <option value="ARM">ARM</option>
+        </select>
       </div>
 
       <div class="form-group">
-        <label>Loan Type:</label>
-        <select id="loanType">
-          <option value="Conventional_30">Conventional - 30 Years</option>
-          <option value="Conventional_20">Conventional - 20 Years</option>
-          <option value="Conventional_15">Conventional - 15 Years</option>
-          <option value="Conventional_10">Conventional - 10 Years</option>
-          <option value="ARM_3">ARM - 3 Years</option>
-          <option value="ARM_5">ARM - 5 Years</option>
-          <option value="ARM_7">ARM - 7 Years</option>
-          <option value="ARM_10">ARM - 10 Years</option>
+        <label for="loan_term">Loan Term (Years):</label>
+        <select id="loan_term" name="loan_term">
+          <option value="30">30</option>
+          <option value="20">20</option>
+          <option value="15">15</option>
+          <option value="10">10</option>
         </select>
       </div>
 
       <button type="submit">Calculate</button>
     </form>
 
-    <div id="result-section" class="result-section" style="display:none;">
-      <h3>Monthly Payment Breakdown</h3>
-      <div class="chart-container">
-        <canvas id="breakdownChart"></canvas>
-      </div>
+    <!-- ===== Result Section (New Layout) ===== -->
+    <div id="results" class="result-section" style="display:none;">
+      <h3>💰 Mortgage Summary</h3>
+      <div class="result-grid">
+        <div class="chart-container">
+          <canvas id="resultChart"></canvas>
+        </div>
 
-      <div class="summary-box">
-        <p><strong>Loan Amount:</strong> $<span id="loanAmountResult"></span></p>
-        <p><strong>Interest Rate:</strong> <span id="interestRateResult"></span>%</p>
-        <p><strong>Total Monthly Payment:</strong> $<span id="monthlyTotal"></span></p>
+        <div class="summary-box">
+          <p><strong>ZIP Code:</strong> <span id="r_zipcode"></span></p>
+          <p><strong>Home Value:</strong> $<span id="r_home_value"></span></p>
+          <p><strong>Down Payment:</strong> $<span id="r_down_payment"></span> (<span id="r_down_percent"></span>%)</p>
+          <p><strong>Loan Amount:</strong> $<span id="r_loan_amount"></span></p>
+          <p><strong>Interest Rate:</strong> <span id="r_interest_rate"></span>%</p>
+          <p><strong>PMI:</strong> <span id="r_pmi"></span>%</p>
+          <p><strong>Monthly Payment:</strong> <strong style="color:#2b4c7e;">$<span id="r_monthly_payment"></span></strong></p>
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    let chartInstance = null;
-
-    async function fetchRate(loanType, loanTerm) {
-      const res = await fetch(`/_rate_hint?loan_type=${loanType}&loan_term=${loanTerm}`);
-      const data = await res.json();
-      return data.rate;
-    }
-
-    document.getElementById("calcForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const [loanTypeRaw, termStr] = document.getElementById("loanType").value.split("_");
-      const loanType = loanTypeRaw;
-      const loanTerm = parseInt(termStr);
-
-      const homeValue = parseFloat(document.getElementById("homeValue").value) || 0;
-      const downPaymentValue = parseFloat(document.getElementById("downPaymentValue").value) || 0;
-      const downType = document.querySelector('input[name="downType"]:checked').value;
-      const zipcode = document.getElementById("zipcode").value.trim();
-      const propertyTax = parseFloat(document.getElementById("propertyTax").value) || 0;
-      const pmi = document.getElementById("pmi").value;
-      const homeIns = document.getElementById("homeIns").value;
-      const hoa = parseFloat(document.getElementById("hoa").value) || 0;
-
-      const interestRate = await fetchRate(loanType, loanTerm);
-      document.getElementById("interestRate").value = interestRate;
-
-      const payload = {
-        zipcode,
-        home_value: homeValue,
-        down_payment_value: downPaymentValue,
-        down_payment_type: downType,
-        loan_type: loanType,
-        loan_term: loanTerm,
-        property_tax: propertyTax,
-        pmi,
-        home_ins: homeIns,
-        hoa
-      };
-
-      const response = await fetch("/calculate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
-
-      document.getElementById("loanAmount").value = result.loan_amount;
-      document.getElementById("loanAmountResult").textContent = result.loan_amount;
-      document.getElementById("interestRateResult").textContent = result.interest_rate;
-      document.getElementById("monthlyTotal").textContent = result.monthly_total;
-
-      const chartData = result.chart;
-      const ctx = document.getElementById("breakdownChart").getContext("2d");
-      if (chartInstance) chartInstance.destroy();
-
-      chartInstance = new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels: Object.keys(chartData),
-          datasets: [{
-            data: Object.values(chartData),
-            backgroundColor: ["#4CAF50", "#2196F3", "#FFC107", "#E91E63", "#9C27B0"]
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: "bottom" }
-          }
-        }
-      });
-
-      document.getElementById("result-section").style.display = "block";
-    });
-  </script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
