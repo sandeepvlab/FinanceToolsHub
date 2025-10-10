@@ -15,7 +15,6 @@ FRED_SERIES = {
     "ARM_5": "MORTGAGE5US"
 }
 
-
 def fetch_fred_latest(series_id):
     """Fetch latest observation from FRED"""
     try:
@@ -46,7 +45,6 @@ def get_interest_rate_for(loan_type: str, loan_term: int):
             val = fetch_fred_latest(FRED_SERIES.get(loan_term))
             if val:
                 return round(val, 3)
-        # Fallback interpolation
         r30 = fetch_fred_latest(FRED_SERIES.get(30)) or 6.8
         r15 = fetch_fred_latest(FRED_SERIES.get(15)) or 6.2
         if loan_term == 20:
@@ -96,6 +94,7 @@ def estimate_home_insurance_annual(zipcode, home_value):
 
 
 def monthly_payment(principal, rate, years):
+    """Standard amortization formula"""
     r = rate / 100 / 12
     n = years * 12
     if r == 0:
@@ -143,8 +142,19 @@ def calculate():
     # PMI and Insurance
     pmi = compute_pmi_percent(down_percent)
     home_ins = estimate_home_insurance_annual(zipcode, home_value)
+
+    # Monthly calculations
     monthly_pi = monthly_payment(loan_amt, rate, loan_term)
-    monthly_total = monthly_pi + (property_tax / 12) + (home_ins / 12) + hoa + ((loan_amt * (pmi / 100)) / 12)
+    monthly_pmi = (loan_amt * (pmi / 100)) / 12
+    monthly_tax = property_tax / 12
+    monthly_ins = home_ins / 12
+
+    monthly_total = monthly_pi + monthly_pmi + monthly_tax + monthly_ins + hoa
+
+    # Totals
+    total_payment = monthly_total * loan_term * 12
+    total_interest = total_payment - loan_amt
+    yearly_payment = monthly_total * 12
 
     return jsonify({
         "loan_amount": round(loan_amt, 2),
@@ -152,7 +162,11 @@ def calculate():
         "interest_rate": round(rate, 3),
         "pmi_percent": round(pmi, 2),
         "home_ins": round(home_ins, 2),
-        "monthly_payment": round(monthly_total, 2)
+        "monthly_payment": round(monthly_total, 2),
+        "yearly_payment": round(yearly_payment, 2),
+        "total_payment": round(total_payment, 2),
+        "total_interest": round(total_interest, 2),
+        "down_payment_amount": round(down_amt, 2)
     })
 
 
