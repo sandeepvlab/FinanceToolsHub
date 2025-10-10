@@ -14,28 +14,56 @@
     }
     .card {
       border-radius: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     .form-label {
       font-weight: 600;
       margin-top: 10px;
     }
-    .result-box {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    }
     .input-group-text {
       display: flex;
       gap: 10px;
     }
-    .loan-summary h5 {
-      font-weight: 600;
-      margin-top: 15px;
+    .loan-summary-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
-    .loan-summary p span {
+    .loan-summary-header {
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+      color: #4e73df;
+    }
+    .loan-summary-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .loan-summary-details p span {
       font-weight: bold;
+    }
+    .chart-container {
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    @media (min-width: 992px) {
+      .loan-summary-box {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .loan-summary-details {
+        flex: 1;
+        padding-right: 20px;
+      }
+      .chart-container {
+        flex: 0 0 300px;
+      }
     }
   </style>
 </head>
@@ -43,10 +71,10 @@
   <div class="container">
     <h1 class="mb-4 text-center">🏠 Smart Mortgage Calculator</h1>
 
-    <div class="row">
+    <div class="row g-4">
       <!-- Left side: Inputs -->
       <div class="col-lg-6">
-        <div class="card p-4 mb-4">
+        <div class="card p-4">
           <h4>🏦 Loan Details</h4>
           <div class="row g-3">
             <div class="col-md-6">
@@ -57,7 +85,6 @@
               <label class="form-label">Home Value ($):</label>
               <input id="home_value" type="number" class="form-control" placeholder="e.g. 500000" />
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Down Payment:</label>
               <div class="input-group">
@@ -68,12 +95,10 @@
                 </div>
               </div>
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Loan Amount ($):</label>
               <input id="loan_amount_field" class="form-control" readonly />
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Loan Type:</label>
               <select id="loan_type" class="form-select" onchange="updateLoanTerms()">
@@ -81,7 +106,6 @@
                 <option value="ARM">ARM</option>
               </select>
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Loan Term (Years):</label>
               <select id="loan_term" class="form-select" onchange="updateRate()">
@@ -91,32 +115,26 @@
                 <option>10</option>
               </select>
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Interest Rate (%):</label>
               <input id="interest_rate" class="form-control" readonly />
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Property Tax ($/year):</label>
               <input id="property_tax" type="number" class="form-control" value="3500" />
             </div>
-
             <div class="col-md-6">
               <label class="form-label">PMI (%):</label>
               <input id="pmi" type="number" class="form-control" readonly />
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Home Insurance ($/year):</label>
               <input id="home_ins" class="form-control" readonly />
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Monthly HOA ($):</label>
               <input id="hoa" type="number" class="form-control" value="200" />
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Start Date:</label>
               <input type="date" id="start_date" class="form-control" />
@@ -131,17 +149,21 @@
 
       <!-- Right side: Loan summary + pie chart -->
       <div class="col-lg-6">
-        <div class="result-box loan-summary">
-          <h4>💰 Loan Summary</h4>
-          <p><strong>Total Monthly Payment:</strong> $<span id="monthly_payment"></span></p>
-          <p><strong>Down Payment Amount:</strong> $<span id="down_amount_summary"></span></p>
-          <p><strong>Start Date:</strong> <span id="start_date_summary"></span></p>
-          <p><strong>Home Insurance:</strong> $<span id="home_ins_summary"></span></p>
-          <p><strong>Yearly Payment Amount:</strong> $<span id="yearly_payment"></span></p>
-          <p><strong>Total Loan Payment:</strong> $<span id="total_loan_payment"></span></p>
-          <p><strong>Total Principal:</strong> $<span id="total_principal"></span></p>
-          <p><strong>Total Interest Payments:</strong> $<span id="total_interest"></span></p>
-          <canvas id="chart"></canvas>
+        <div class="loan-summary-box">
+          <div class="loan-summary-details">
+            <div class="loan-summary-header">💰 Loan Summary</div>
+            <p>Total Monthly Payment: $<span id="monthly_payment"></span></p>
+            <p>Down Payment Amount: $<span id="down_amount_summary"></span></p>
+            <p>Start Date: <span id="start_date_summary"></span></p>
+            <p>Home Insurance: $<span id="home_ins_summary"></span></p>
+            <p>Yearly Payment Amount: $<span id="yearly_payment"></span></p>
+            <p>Total Loan Payment: $<span id="total_loan_payment"></span></p>
+            <p>Total Principal: $<span id="total_principal"></span></p>
+            <p>Total Interest Payments: $<span id="total_interest"></span></p>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart"></canvas>
+          </div>
         </div>
       </div>
     </div>
@@ -150,7 +172,6 @@
   <script>
     let chart = null;
 
-    // Fill loan terms based on type
     function updateLoanTerms() {
       const type = document.getElementById("loan_type").value;
       const termSelect = document.getElementById("loan_term");
@@ -165,7 +186,6 @@
     }
 
     async function updateRate() {
-      // Here you should call backend _rate_hint endpoint
       const type = document.getElementById("loan_type").value;
       const term = document.getElementById("loan_term").value;
       const zip = document.getElementById("zipcode").value;
@@ -187,6 +207,7 @@
       };
 
       const startDate = document.getElementById("start_date").value;
+
       const res = await fetch("/calculate", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -195,10 +216,7 @@
 
       const data = await res.json();
 
-      // Fill input loan amount
       document.getElementById("loan_amount_field").value = data.loan_amount;
-
-      // Loan summary details
       document.getElementById("monthly_payment").textContent = data.monthly_total;
       document.getElementById("down_amount_summary").textContent = data.down_amount;
       document.getElementById("start_date_summary").textContent = startDate || "-";
@@ -208,7 +226,6 @@
       document.getElementById("total_principal").textContent = data.loan_amount;
       document.getElementById("total_interest").textContent = ((data.monthly_total*data.loan_term*12) - data.loan_amount).toFixed(2);
 
-      // Pie chart
       if(chart) chart.destroy();
       chart = new Chart(document.getElementById("chart"), {
         type: 'pie',
@@ -224,6 +241,14 @@
             ],
             backgroundColor: ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"]
           }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
         }
       });
     }
